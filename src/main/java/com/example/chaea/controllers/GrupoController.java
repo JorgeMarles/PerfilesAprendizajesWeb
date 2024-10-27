@@ -170,7 +170,7 @@ public class GrupoController {
         return ResponseEntity.ok().body("Grupo(s) eliminado(s) exitosamente.");
     }
 
-    // Método para agregar estudiantes a un grupo
+ // Método para agregar estudiantes a un grupo
     @PostMapping("/{id}/estudiantes")
     public ResponseEntity<?> agregarEstudiantesAlGrupo(@PathVariable int id, @RequestBody List<String> emails) {
         Optional<Grupo> grupoOpt = grupoRepository.findById(id);
@@ -198,7 +198,7 @@ public class GrupoController {
         }
         return ResponseEntity.ok(grupoRepository.save(grupo)); // Actualizar el grupo
     }
-
+    
     // Método para eliminar estudiantes de un grupo
     @DeleteMapping("/{id}/estudiantes")
     public ResponseEntity<?> eliminarEstudiantesDelGrupo(@PathVariable int id, @RequestBody List<String> emails) {
@@ -221,5 +221,27 @@ public class GrupoController {
             estudianteRepository.save(estudiante); 
         }
         return ResponseEntity.ok(grupoRepository.save(grupo)); // Actualizar el grupo
+    }
+    
+    //Método para eliminar UN estudiante de un grupo
+    @DeleteMapping("/{id}/estudiantes/{email}")
+    public ResponseEntity<?> eliminarEstudianteDelGrupo(@PathVariable int id, @PathVariable String email) {
+        Optional<Grupo> grupoOpt = grupoRepository.findById(id);
+        if (!grupoOpt.isPresent()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Grupo no encontrado con el ID: " + id);
+        }
+        Grupo grupo = grupoOpt.get();
+        if (!email.contains("@")) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Formato de correo incorrecto: " + email);
+        }
+        Optional<Estudiante> estudianteOpt = estudianteRepository.findById(email);
+        if (!estudianteOpt.isPresent()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Estudiante no encontrado con el correo: " + email);
+        }
+        Estudiante estudiante = estudianteOpt.get();
+        grupo.getEstudiantes().remove(estudiante);
+        estudiante.getGrupos().remove(grupo);
+        estudianteRepository.save(estudiante);
+        return ResponseEntity.ok(grupoRepository.save(grupo));
     }
 }
